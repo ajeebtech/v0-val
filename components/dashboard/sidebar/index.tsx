@@ -105,8 +105,8 @@ export function DashboardSidebar({
           <MonkeyIcon className="size-10 group-hover:scale-[1.7] origin-top-left transition-transform" />
         </div>
         <div className="grid flex-1 text-left text-sm leading-tight">
-          <span className="text-2xl font-display">M.O.N.K.Y.</span>
-          <span className="text-xs uppercase">The OS for Rebels</span>
+          <span className="text-2xl font-display">L.I.F.E.</span>
+          <span className="text-xs uppercase">the world is yours</span>
         </div>
       </SidebarHeader>
 
