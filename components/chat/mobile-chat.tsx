@@ -32,34 +32,13 @@ export function MobileChat() {
     }
   };
 
-  // Don't render at all on desktop screens
-  if (!isMobile) {
+  // Don't render on mobile
+  if (isMobile) {
     return null;
   }
 
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange} defaultOpen={false}>
-      {/* Floating CTA Button - Styled like collapsed desktop chat */}
-      <SheetTrigger asChild>
-        <Button
-          size="xl"
-          className="pl-3 fixed gap-4 bottom-4 right-4 z-40 md:hidden"
-        >
-          {/* Status Indicator */}
-          <ChatStatusIndicator
-            isExpanded={false}
-            hasUnreadMessages={hasNewMessages}
-            unreadCount={totalUnreadCount}
-          />
-
-          {/* Title */}
-          <span>
-            {hasNewMessages
-              ? `New Message${totalUnreadCount > 1 ? "s" : ""}`
-              : "Chat"}
-          </span>
-        </Button>
-      </SheetTrigger>
 
       {/* Chat Drawer */}
       <SheetContent

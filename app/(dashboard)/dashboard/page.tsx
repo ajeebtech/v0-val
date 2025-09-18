@@ -9,6 +9,7 @@ import ProcessorIcon from "@/components/icons/proccesor";
 import BoomIcon from "@/components/icons/boom";
 import mockDataJson from "@/mock.json";
 import type { MockData } from "@/types/dashboard";
+import NextClass from "@/components/dashboard/next-class";
 
 const mockData = mockDataJson as MockData;
 
@@ -29,7 +30,8 @@ export default function DashboardOverview() {
       }}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {mockData.dashboardStats.map((stat, index) => (
+        <NextClass />
+        {mockData.dashboardStats.slice(1).map((stat, index) => (
           <DashboardStat
             key={index}
             label={stat.label}

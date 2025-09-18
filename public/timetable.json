@@ -1,0 +1,54 @@
+{
+    "Monday": [
+      {"time": "08:00-08:50", "class": "BECE204L AB3-307"},
+      {"time": "08:55-09:45", "class": "BCSE303L AB3-307"},
+      {"time": "09:50-10:40", "class": "BMAT205L AB3-209"},
+      {"time": "10:45-11:35", "class": "BCSE202L AB3-607"},
+      {"time": "11:40-12:30", "class": "BCSE103E AB3-305"},
+      {"time": "15:50-16:40", "class": "BCSE103E AB1-605A"},
+      {"time": "16:45-17:35", "class": "BCSE103E AB1-605A"}
+    ],
+    "Tuesday": [
+      {"time": "08:00-08:50", "class": "BCSE202L AB3-607"},
+      {"time": "08:55-09:45", "class": "BJAP101L AB3-207"},
+      {"time": "09:50-10:40", "class": "BCSE205L AB3-303"},
+      {"time": "10:45-11:35", "class": "BSTS202P AB3-308"},
+      {"time": "15:50-16:40", "class": "BCSE202P AB1-311"},
+      {"time": "16:45-17:35", "class": "BCSE202P AB1-311"}
+    ],
+    "Wednesday": [
+      {"time": "08:00-08:50", "class": "BSTS202P AB3-308"},
+      {"time": "08:55-09:45", "class": "BECE204L AB3-307"},
+      {"time": "09:50-10:40", "class": "BCSE303L AB3-307"},
+      {"time": "10:45-11:35", "class": "BMAT205L AB3-209"},
+      {"time": "15:50-16:40", "class": "BCSE103E AB1-605A"},
+      {"time": "16:45-17:35", "class": "BCSE103E AB1-605A"}
+    ],
+    "Thursday": [
+      {"time": "08:00-08:50", "class": "BMAT205L AB3-209"},
+      {"time": "08:55-09:45", "class": "BCSE202L AB3-607"},
+      {"time": "09:50-10:40", "class": "BJAP101L AB3-207"},
+      {"time": "10:45-11:35", "class": "BCSE205L AB3-303"},
+      {"time": "15:50-16:40", "class": "BECE204P AB3-602"},
+      {"time": "14:55-15:45", "class": "BECE204P AB3-602"},
+      {"time": "15:50-16:40", "class": "BCSE303P AB1-311"},
+      {"time": "16:45-17:35", "class": "BCSE303P AB1-311"}
+    ],
+    "Friday": [
+      {"time": "08:00-08:50", "class": "BCSE205L AB3-303"},
+      {"time": "08:55-09:45", "class": "BSTS202P AB3-308"},
+      {"time": "09:50-10:40", "class": "BECE204L AB3-307"},
+      {"time": "10:45-11:35", "class": "BCSE303L AB3-307"},
+      {"time": "11:40-12:30", "class": "BMAT205L AB3-209"}
+    ],
+    "Saturday": [
+      {"time": "09:50-10:40", "class": "BEEE102L AB3-605"},
+      {"time": "10:45-11:35", "class": "BEEE102L AB3-605"},
+      {"time": "15:50-16:40", "class": "BEEE102L AB3-605"}
+    ],
+    "Sunday": [
+      {"time": "08:00-08:50", "class": "BEEE102L AB3-605"},
+      {"time": "08:55-09:45", "class": "BEEE102L AB3-605"},
+      {"time": "14:00-14:50", "class": "BEEE102L AB3-605"}
+    ]
+  }

@@ -7,8 +7,7 @@ import mockDataJson from '@/mock.json';
 import type { MockData } from '@/types/dashboard';
 import { LocationWidget } from '@/components/dashboard/LocationWidget';
 import Notifications from '@/components/dashboard/notifications';
-import { MobileChat } from '@/components/chat/mobile-chat';
-import Chat from '@/components/chat';
+import TodoList from '@/components/dashboard/todo-list';
 import SignOutButton from '@/components/auth/SignOutButton';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
@@ -54,14 +53,11 @@ export default function DashboardLayout({
           <div className="col-span-3 hidden lg:block">
             <div className="sticky top-4 space-y-4">
               <LocationWidget defaultData={mockData.widgetData} />
-              <Notifications initialNotifications={mockData.notifications} />
-              <Chat />
+              <Notifications />
+              <TodoList />
             </div>
           </div>
         </div>
-
-        {/* Mobile Chat - floating CTA with drawer */}
-        <MobileChat />
       </SidebarProvider>
     </ProtectedRoute>
   );

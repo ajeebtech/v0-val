@@ -13,29 +13,48 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      // Define your database tables here
-      // Example:
-      // profiles: {
-      //   Row: {}
-      //   Insert: {}
-      //   Update: {}
-      // }
-    }
+      todos: {
+        Row: {
+          id: string;
+          user_id: string;
+          task: string;
+          is_completed: boolean;
+          created_at: string;
+          updated_at?: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          task: string;
+          is_completed?: boolean;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          task?: string;
+          is_completed?: boolean;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      [_ in never]: never;
+    };
+  };
 }
 
 // This type will be used for type-safe client-side database access
-export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
-export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T]
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
