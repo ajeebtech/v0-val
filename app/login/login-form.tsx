@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo: string }) {
   const [email, setEmail] = useState('');
@@ -27,7 +30,6 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo: s
       if (error) throw error;
       
       // On successful login, the middleware will handle the redirect
-      // Force a page reload to ensure all auth state is properly set
       window.location.href = redirectTo;
       
     } catch (error: any) {
@@ -39,60 +41,57 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo: s
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        <div className="bg-gray-800 rounded-lg shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-400">Sign in to your account</p>
+        <div className="bg-card rounded-xl shadow-lg p-8 border border-border">
+          <div className="mb-8 text-center">
+            <h1 className="text-5xl font-bold font-display tracking-tight mb-2">
+              garage
+            </h1>
+            <p className="text-sm text-muted-foreground">the world is yours</p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded-lg text-red-400 text-sm">
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-foreground">
                 Email
-              </label>
-              <input
+              </Label>
+              <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your email"
+                className="w-full font-display"
                 required
               />
             </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                  Password
-                </label>
-                <a href="#" className="text-sm text-blue-400 hover:text-blue-300">
-                  Forgot password?
-                </a>
-              </div>
-              <input
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-foreground">
+                Password
+              </Label>
+              <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter your password"
+                className="w-full font-display"
                 required
               />
             </div>
 
-            <button
-              type="submit"
+            <Button 
+              type="submit" 
+              className="w-full mt-6"
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 flex items-center justify-center"
             >
               {loading ? (
                 <>
@@ -103,15 +102,8 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo: s
                   Signing in...
                 </>
               ) : 'Sign In'}
-            </button>
+            </Button>
           </form>
-
-          <div className="mt-6 text-center text-sm text-gray-400">
-            Don't have an account?{' '}
-            <a href="/signup" className="text-blue-400 hover:text-blue-300 font-medium">
-              Sign up
-            </a>
-          </div>
         </div>
       </div>
     </div>
