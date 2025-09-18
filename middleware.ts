@@ -8,6 +8,9 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // Create a new response that we can modify
+  response = NextResponse.next();
+  
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,33 +20,32 @@ export async function middleware(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          });
+          // Forward the Set-Cookie header to the response
           response.cookies.set({
             name,
             value,
             ...options,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            httpOnly: true,
+            path: '/',
           });
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          });
+          // Forward the Set-Cookie header to the response
           response.cookies.set({
             name,
             value: '',
             ...options,
+            maxAge: 0,
+            path: '/',
           });
         },
       },
     }
   );
 
+  // Refresh session if expired - required for Server Components
   const { data: { session } } = await supabase.auth.getSession();
   const url = new URL(request.url);
 
@@ -56,15 +58,36 @@ export async function middleware(request: NextRequest) {
     '/api/auth',
     '/signup',
     '/forgot-password',
-    '/reset-password'
+    '/reset-password',
+    '/api',
+    '/_vercel',
+    '/_next/static',
+    '/_next/image',
+    '/public',
   ];
   
   const isPublicRoute = publicRoutes.some(route => 
-    route === url.pathname || url.pathname.startsWith(`${route}/`)
+    route === url.pathname || 
+    url.pathname.startsWith(`${route}/`) ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.json')
   );
 
   // If it's a public route, continue without redirecting
   if (isPublicRoute) {
+    return response;
+  }
+
+  // Handle API routes
+  if (url.pathname.startsWith('/api/')) {
+    // For API routes, we don't redirect, just verify the session
+    if (!session && !url.pathname.startsWith('/api/auth/')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
     return response;
   }
 

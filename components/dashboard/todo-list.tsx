@@ -37,17 +37,9 @@ export default function TodoList() {
 
   const fetchTodos = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setTodos([]);
-        setIsLoading(false);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('todos')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -65,78 +57,27 @@ export default function TodoList() {
     const todoText = newTodo.trim();
     if (!todoText || isAdding) return;
 
-    console.log('Attempting to add todo:', todoText);
     setIsAdding(true);
     
     try {
-      // Get the current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) {
-        console.error('Error getting user:', userError);
-        toast.error('Authentication error. Please refresh the page.');
-        return;
-      }
-      
-      if (!user) {
-        console.log('No user found');
-        toast.error('Please sign in to add todos');
-        return;
-      }
-      
-      console.log('User ID:', user.id);
-      
-      // Test the connection first
-      console.log('Testing Supabase connection...');
-      const { data: testData, error: testError } = await supabase
-        .from('todos')
-        .select('id')
-        .limit(1);
-      
-      if (testError) {
-        console.error('Supabase connection test failed:', testError);
-        toast.error('Failed to connect to the database');
-        return;
-      }
-      
-      console.log('Supabase connection test successful');
-      
-      // Add the new todo
-      console.log('Inserting new todo...');
       const { data, error } = await supabase
         .from('todos')
         .insert([{ 
           task: todoText,
-          is_completed: false,
-          user_id: user.id 
+          is_completed: false 
         }])
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase insert error:', error);
-        throw error;
-      }
-
-      console.log('Todo added successfully:', data);
+      if (error) throw error;
       
-      // Update the local state
       setTodos(prev => [data, ...prev]);
       setNewTodo('');
-      toast.success('Todo added successfully!');
+      toast.success('Todo added!');
       
     } catch (error) {
-      console.error('Error in addTodo:', error);
-      
-      // Handle different error types
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      toast.error(`Failed to add todo: ${errorMessage}`);
-      
-      // If there's an auth error
-      if (errorMessage.includes('JWT') || errorMessage.includes('auth')) {
-        console.log('Auth error detected');
-        await supabase.auth.signOut();
-      }
+      console.error('Error adding todo:', error);
+      toast.error('Failed to add todo');
     } finally {
       setIsAdding(false);
     }
@@ -158,6 +99,26 @@ export default function TodoList() {
     } catch (error) {
       console.error('Error updating todo:', error);
       toast.error('Failed to update todo');
+    }
+  };
+
+  const deleteTodo = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this todo?')) {
+      try {
+        const { error } = await supabase
+          .from('todos')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        
+        // Update local state
+        setTodos(todos.filter(todo => todo.id !== id));
+        toast.success('Todo deleted!');
+      } catch (error) {
+        console.error('Error deleting todo:', error);
+        toast.error('Failed to delete todo');
+      }
     }
   };
 
@@ -245,6 +206,15 @@ export default function TodoList() {
                         {new Date(todo.created_at).toLocaleDateString()}
                       </p>
                     </div>
+                    <button
+                      onClick={() => deleteTodo(todo.id)}
+                      className="p-1 text-red-500 rounded-full hover:bg-red-100"
+                      title="Delete todo"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 </motion.li>
               ))}
