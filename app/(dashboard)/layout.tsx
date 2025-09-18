@@ -5,7 +5,7 @@ import { MobileHeader } from '@/components/dashboard/mobile-header';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import mockDataJson from '@/mock.json';
 import type { MockData } from '@/types/dashboard';
-import Widget from '@/components/dashboard/widget';
+import { LocationWidget } from '@/components/dashboard/LocationWidget';
 import Notifications from '@/components/dashboard/notifications';
 import { MobileChat } from '@/components/chat/mobile-chat';
 import Chat from '@/components/chat';
@@ -53,7 +53,7 @@ export default function DashboardLayout({
           <div className="col-span-1 lg:col-span-7">{children}</div>
           <div className="col-span-3 hidden lg:block">
             <div className="sticky top-4 space-y-4">
-              <Widget widgetData={mockData.widgetData} />
+              <LocationWidget defaultData={mockData.widgetData} />
               <Notifications initialNotifications={mockData.notifications} />
               <Chat />
             </div>

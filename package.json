@@ -11,6 +11,8 @@
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
     "@eslint/eslintrc": "latest",
+    "@heroui/react": "^2.8.4",
+    "@heroui/spinner": "^2.2.23",
     "@hookform/resolvers": "^3.10.0",
     "@number-flow/react": "latest",
     "@radix-ui/react-accordion": "1.2.2",
