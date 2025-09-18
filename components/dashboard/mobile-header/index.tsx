@@ -7,6 +7,7 @@ import MonkeyIcon from "@/components/icons/monkey";
 import MobileNotifications from "@/components/dashboard/notifications/mobile-notifications";
 import type { MockData } from "@/types/dashboard";
 import BellIcon from "@/components/icons/bell";
+import UserMenu from "@/components/auth/UserMenu";
 
 interface MobileHeaderProps {
   mockData: MockData;
@@ -31,7 +32,8 @@ export function MobileHeader({ mockData }: MobileHeaderProps) {
         </div>
 
         <Sheet>
-          {/* Right: Notifications Menu */}
+          <div className="flex items-center gap-2">
+          {/* Notifications Menu */}
           <SheetTrigger asChild>
             <Button variant="secondary" size="icon" className="relative">
               {unreadCount > 0 && (
@@ -42,6 +44,10 @@ export function MobileHeader({ mockData }: MobileHeaderProps) {
               <BellIcon className="size-4" />
             </Button>
           </SheetTrigger>
+          
+          {/* User Menu */}
+          <UserMenu />
+        </div>
 
           {/* Notifications Sheet */}
           <SheetContent

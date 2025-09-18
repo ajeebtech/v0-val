@@ -1,57 +1,57 @@
-import DashboardPageLayout from "@/components/dashboard/layout";
-import DashboardStat from "@/components/dashboard/stat";
-import DashboardChart from "@/components/dashboard/chart";
-import RebelsRanking from "@/components/dashboard/rebels-ranking";
-import SecurityStatus from "@/components/dashboard/security-status";
-import BracketsIcon from "@/components/icons/brackets";
-import GearIcon from "@/components/icons/gear";
-import ProcessorIcon from "@/components/icons/proccesor";
-import BoomIcon from "@/components/icons/boom";
-import mockDataJson from "@/mock.json";
-import type { MockData } from "@/types/dashboard";
+'use client';
 
-const mockData = mockDataJson as MockData;
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Icon mapping
-const iconMap = {
-  gear: GearIcon,
-  proccesor: ProcessorIcon,
-  boom: BoomIcon,
-};
+export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
-export default function DashboardOverview() {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500" />
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <DashboardPageLayout
-      header={{
-        title: "Overview",
-        description: "Last updated 12:05",
-        icon: BracketsIcon,
-      }}
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-        {mockData.dashboardStats.map((stat, index) => (
-          <DashboardStat
-            key={index}
-            label={stat.label}
-            value={stat.value}
-            description={stat.description}
-            icon={iconMap[stat.icon as keyof typeof iconMap]}
-            tag={stat.tag}
-            intent={stat.intent}
-            direction={stat.direction}
-          />
-        ))}
-      </div>
-
-      <div className="mb-6">
-        <DashboardChart />
-      </div>
-
-      {/* Main 2-column grid section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <RebelsRanking rebels={mockData.rebelsRanking} />
-        <SecurityStatus statuses={mockData.securityStatus} />
-      </div>
-    </DashboardPageLayout>
+    <div className="container mx-auto p-4">
+      <Card className="max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle>Welcome to L.I.F.E. OS</CardTitle>
+          <CardDescription>
+            The ultimate OS for rebels. Making the web for brave individuals.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-gray-300">
+              Hello, {user.email}! You're now logged in and ready to explore the L.I.F.E. OS platform.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button onClick={() => router.push('/dashboard')}>
+                Go to Dashboard
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/settings')}>
+                Account Settings
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
