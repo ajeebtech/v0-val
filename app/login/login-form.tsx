@@ -1,18 +1,23 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo: string }) {
+export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: string }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Get the redirect URL from query params if it exists
+  const redirectFrom = searchParams?.get('redirectedFrom') || '';
+  const finalRedirectTo = redirectFrom || redirectTo;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,19 +27,46 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo: s
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      // Store the redirect URL in localStorage before signing in
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('redirectAfterLogin', finalRedirectTo);
+      }
+
+      // Sign in with email and password
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
-      if (error) throw error;
+      if (signInError) throw signInError;
       
-      // On successful login, the middleware will handle the redirect
-      window.location.href = redirectTo;
+      if (data?.session) {
+        console.log('Login successful, session:', data.session);
+        // The AuthProvider will handle the redirect after successful login
+      } else {
+        throw new Error('No session returned after login');
+      }
       
     } catch (error: any) {
       console.error('Login error:', error);
-      setError(error.error_description || error.message || 'An error occurred during login. Please try again.');
+      
+      // Clear the redirect URL on error
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('redirectAfterLogin');
+      }
+      
+      // More specific error messages
+      if (error.message?.includes?.('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (error.message?.includes?.('Email not confirmed')) {
+        setError('Please verify your email before logging in.');
+      } else if (error.status === 400) {
+        setError('Invalid request. Please check your input and try again.');
+      } else if (error.status === 0) {
+        setError('Cannot connect to the server. Please check your internet connection.');
+      } else {
+        setError(error.error_description || error.message || 'An error occurred during login. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

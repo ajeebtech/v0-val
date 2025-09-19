@@ -50,6 +50,19 @@ export default function LoginPage() {
     );
   }
 
-  // Render the login form
+  // For debugging - show auth status
+  if (process.env.NODE_ENV !== 'production') {
+    const AuthStatus = require('@/components/AuthStatus').default;
+    return (
+      <div className="space-y-8">
+        <LoginForm redirectTo={redirectTo} />
+        <div className="max-w-md mx-auto">
+          <AuthStatus />
+        </div>
+      </div>
+    );
+  }
+
+  // In production, just show the login form
   return <LoginForm redirectTo={redirectTo} />;
 }

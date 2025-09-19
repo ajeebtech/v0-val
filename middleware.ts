@@ -1,128 +1,60 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+// List of public paths that don't require authentication
+const publicPaths = [
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/auth/callback',
+  '/_next',
+  '/favicon.ico',
+  '/api',
+  '/_vercel',
+  '/_next/static',
+  '/_next/image',
+  '/public',
+  '/env-test', // For testing
+];
 
-  // Create a new response that we can modify
-  response = NextResponse.next();
+// List of protected paths that require authentication
+const protectedPaths = [
+  '/dashboard',
+  '/profile',
+  // Add other protected paths here
+];
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const { pathname } = req.nextUrl;
+
+  // Skip middleware for public paths
+  if (publicPaths.some(path => pathname.startsWith(path))) {
+    return res;
+  }
+
+  // Check for auth token in localStorage (handled client-side)
+  // The actual authentication check will be done in the page components
   
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          // Forward the Set-Cookie header to the response
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-            sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production',
-            httpOnly: true,
-            path: '/',
-          });
-        },
-        remove(name: string, options: CookieOptions) {
-          // Forward the Set-Cookie header to the response
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-            maxAge: 0,
-            path: '/',
-          });
-        },
-      },
-    }
-  );
-
-  // Refresh session if expired - required for Server Components
-  const { data: { session } } = await supabase.auth.getSession();
-  const url = new URL(request.url);
-
-  // Define public routes that don't require authentication
-  const publicRoutes = [
-    '/login',
-    '/auth/callback',
-    '/_next',
-    '/favicon.ico',
-    '/api/auth',
-    '/signup',
-    '/forgot-password',
-    '/reset-password',
-    '/api',
-    '/_vercel',
-    '/_next/static',
-    '/_next/image',
-    '/public',
-  ];
-  
-  const isPublicRoute = publicRoutes.some(route => 
-    route === url.pathname || 
-    url.pathname.startsWith(`${route}/`) ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.json')
-  );
-
-  // If it's a public route, continue without redirecting
-  if (isPublicRoute) {
-    return response;
+  // For protected paths, we'll let the client-side handle the redirect
+  // This avoids cookie parsing issues in the middleware
+  if (protectedPaths.some(path => pathname.startsWith(path))) {
+    // The actual redirect will be handled by the client-side AuthProvider
+    return res;
   }
 
-  // Handle API routes
-  if (url.pathname.startsWith('/api/')) {
-    // For API routes, we don't redirect, just verify the session
-    if (!session && !url.pathname.startsWith('/api/auth/')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-    return response;
-  }
-
-  // Redirect to login if user is not authenticated and trying to access protected routes
-  if (!session) {
-    // Don't redirect if we're already going to login
-    if (url.pathname !== '/login') {
-      const redirectUrl = new URL('/login', request.url);
-      redirectUrl.searchParams.set('redirectedFrom', url.pathname);
-      return NextResponse.redirect(redirectUrl);
-    }
-    return response;
-  }
-
-  // If user is authenticated and trying to access login/signup, redirect to dashboard or the intended page
-  if (['/login', '/signup', '/'].includes(url.pathname)) {
-    const redirectTo = url.searchParams.get('redirectedFrom') || '/dashboard';
-    // Prevent redirect loops by checking if we're already going to the same path
-    if (url.pathname !== redirectTo) {
-      return NextResponse.redirect(new URL(redirectTo, request.url));
-    }
-  }
-
-  return response;
+  return res;
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

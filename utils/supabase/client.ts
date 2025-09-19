@@ -2,8 +2,30 @@ import { createBrowserClient } from '@supabase/ssr';
 import type { Database } from '@/types/supabase';
 
 // Create a single supabase client for client-side usage
+let supabaseClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
+
 export function createClient() {
-  return createBrowserClient<Database>(
+  // Return existing client if it exists
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
+  // Debug log the environment variables (don't log the full key in production)
+  if (typeof window !== 'undefined') {
+    console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('Supabase Key present:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  }
+
+  // Validate environment variables
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    console.error('Missing NEXT_PUBLIC_SUPABASE_URL');
+  }
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    console.error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  }
+
+  // Create and store the client with simplified cookie handling
+  supabaseClient = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -11,6 +33,22 @@ export function createClient() {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
+        storageKey: 'sb-auth-token',
+        storage: {
+          getItem: (key) => {
+            if (typeof window === 'undefined') return null;
+            const item = localStorage.getItem(key);
+            return item ? JSON.parse(item) : null;
+          },
+          setItem: (key, value) => {
+            if (typeof window === 'undefined') return;
+            localStorage.setItem(key, JSON.stringify(value));
+          },
+          removeItem: (key) => {
+            if (typeof window === 'undefined') return;
+            localStorage.removeItem(key);
+          },
+        },
       },
       cookies: {
         get(name: string) {
@@ -32,6 +70,11 @@ export function createClient() {
             secure: process.env.NODE_ENV === 'production',
             ...options,
           };
+          
+          // In development, we need to set domain to localhost
+          if (process.env.NODE_ENV !== 'production') {
+            cookieOptions.domain = 'localhost';
+          }
           
           // Convert options to cookie string
           let cookieString = `${name}=${encodeURIComponent(value)}`;
@@ -60,6 +103,8 @@ export function createClient() {
       },
     }
   );
+
+  return supabaseClient;
 }
 
 export const supabase = createClient();
