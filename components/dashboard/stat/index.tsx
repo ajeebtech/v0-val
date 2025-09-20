@@ -70,7 +70,7 @@ export default function DashboardStat({
       <CardContent className="bg-accent flex-1 pt-2 md:pt-6 overflow-clip relative">
         <div className="flex items-center">
           <div 
-            className="text-4xl md:text-5xl font-display"
+            className="text-2xl md:text-3xl font-display leading-tight"
             dangerouslySetInnerHTML={{
               __html: isNumeric 
                 ? `${prefix}${numericValue}${suffix}`
