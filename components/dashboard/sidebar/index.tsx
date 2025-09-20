@@ -20,6 +20,7 @@ import EmailIcon from "@/components/icons/email";
 import GearIcon from "@/components/icons/gear";
 import { Gamepad2 } from 'lucide-react';
 import UserMenu from "@/components/auth/UserMenu";
+import { GlobeDemo } from "../globe-demo";
 
 const sidebarItems = [
   {
@@ -122,9 +123,13 @@ export function DashboardSidebar({
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* Globe Component */}
+        <div className="py-4">
+          <GlobeDemo />
+        </div>
       </SidebarContent>
 
-      <SidebarFooter className="p-0">
+      <SidebarFooter className="p-0 mt-auto">
         <SidebarGroup>
           <SidebarGroupLabel>
             <Bullet className="mr-2" />
