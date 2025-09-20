@@ -12,12 +12,8 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const searchParams = useSearchParams();
   const router = useRouter();
-
-  // Get the redirect URL from query params if it exists
-  const redirectFrom = searchParams?.get('redirectedFrom') || '';
-  const finalRedirectTo = redirectFrom || redirectTo;
+  const finalRedirectTo = redirectTo;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
