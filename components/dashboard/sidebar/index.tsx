@@ -1,104 +1,69 @@
-"use client";
+// components/dashboard/sidebar/index.tsx
+'use client';
 
-import * as React from "react";
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarRail,
-} from "@/components/ui/sidebar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import * as React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import AtomIcon from "@/components/icons/atom";
+import { Bullet } from "@/components/ui/bullet";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, 
+  SidebarGroupContent, SidebarGroupLabel, SidebarHeader, 
+  SidebarMenu, SidebarMenuBadge, SidebarMenuButton, 
+  SidebarMenuItem, SidebarRail } from "@/components/ui/sidebar";
+import LockIcon from "@/components/icons/lock";
+import MonkeyIcon from "@/components/icons/monkey";
 import BracketsIcon from "@/components/icons/brackets";
+import AtomIcon from "@/components/icons/atom";
 import ProcessorIcon from "@/components/icons/proccesor";
 import CuteRobotIcon from "@/components/icons/cute-robot";
 import EmailIcon from "@/components/icons/email";
 import GearIcon from "@/components/icons/gear";
-import MonkeyIcon from "@/components/icons/monkey";
-import DotsVerticalIcon from "@/components/icons/dots-vertical";
-import { Bullet } from "@/components/ui/bullet";
-import LockIcon from "@/components/icons/lock";
-import Image from "next/image";
-import { useIsV0 } from "@/lib/v0-context";
 import UserMenu from "@/components/auth/UserMenu";
-import { useAuth } from "@/contexts/AuthContext";
 
-// This is sample data for the sidebar
-const data = {
-  navMain: [
-    {
-      title: "Tools",
-      items: [
-        {
-          title: "Overview",
-          url: "/",
-          icon: BracketsIcon,
-          isActive: true,
-        },
-        {
-          title: "Laboratory",
-          url: "/laboratory",
-          icon: AtomIcon,
-          isActive: false,
-        },
-        {
-          title: "Devices",
-          url: "/devices",
-          icon: ProcessorIcon,
-          isActive: false,
-        },
-        {
-          title: "Security",
-          url: "/security",
-          icon: CuteRobotIcon,
-          isActive: false,
-        },
-        {
-          title: "Communication",
-          url: "/communication",
-          icon: EmailIcon,
-          isActive: false,
-        },
-        {
-          title: "Admin Settings",
-          url: "/admin",
-          icon: GearIcon,
-          isActive: false,
-          locked: true,
-        },
-      ],
-    },
-  ],
-  desktop: {
-    title: "Desktop (Online)",
-    status: "online",
+const sidebarItems = [
+  {
+    title: "Overview",
+    url: "/",
+    icon: BracketsIcon,
   },
-  user: {
-    name: "KRIMSON",
-    email: "krimson@joyco.studio",
-    avatar: "/avatars/user_krimson.png",
+  {
+    title: "Ideas",
+    url: "/ideas",
+    icon: AtomIcon,
   },
-};
+  {
+    title: "Laboratory",
+    url: "/laboratory",
+    icon: AtomIcon,
+  },
+  {
+    title: "Devices",
+    url: "/devices",
+    icon: ProcessorIcon,
+  },
+  {
+    title: "Security",
+    url: "/security",
+    icon: CuteRobotIcon,
+  },
+  {
+    title: "Communication",
+    url: "/communication",
+    icon: EmailIcon,
+  },
+  {
+    title: "Admin Settings",
+    url: "/admin",
+    icon: GearIcon,
+    locked: true,
+  },
+];
 
 export function DashboardSidebar({
   className,
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const isV0 = useIsV0();
+  const pathname = usePathname();
 
   return (
     <Sidebar {...props} className={cn("py-sides", className)}>
@@ -113,46 +78,32 @@ export function DashboardSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        {data.navMain.map((group, i) => (
-          <SidebarGroup
-            className={cn(i === 0 && "rounded-t-none")}
-            key={group.title}
-          >
-            <SidebarGroupLabel>
-              <Bullet className="mr-2" />
-              {group.title}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
+        <SidebarGroup className="rounded-t-none">
+          <SidebarGroupLabel>
+            <Bullet className="mr-2" />
+            Tools
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sidebarItems.map((item) => {
+                const isActive = pathname === item.url || 
+                  (item.url !== '/' && pathname?.startsWith(item.url));
+                
+                return (
                   <SidebarMenuItem
                     key={item.title}
-                    className={cn(
-                      item.locked && "pointer-events-none opacity-50",
-                      isV0 && "pointer-events-none"
-                    )}
-                    data-disabled={item.locked}
+                    className={item.locked ? "pointer-events-none opacity-50" : ""}
                   >
                     <SidebarMenuButton
-                      asChild={!item.locked}
-                      isActive={item.isActive}
+                      asChild
+                      isActive={isActive}
                       disabled={item.locked}
-                      className={cn(
-                        "disabled:cursor-not-allowed",
-                        item.locked && "pointer-events-none"
-                      )}
+                      className={item.locked ? "pointer-events-none" : ""}
                     >
-                      {item.locked ? (
-                        <div className="flex items-center gap-3 w-full">
-                          <item.icon className="size-5" />
-                          <span>{item.title}</span>
-                        </div>
-                      ) : (
-                        <a href={item.url}>
-                          <item.icon className="size-5" />
-                          <span>{item.title}</span>
-                        </a>
-                      )}
+                      <Link href={item.url} className="flex items-center gap-3 w-full">
+                        <item.icon className="size-5" />
+                        <span>{item.title}</span>
+                      </Link>
                     </SidebarMenuButton>
                     {item.locked && (
                       <SidebarMenuBadge>
@@ -160,11 +111,11 @@ export function DashboardSidebar({
                       </SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+                );
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="p-0">

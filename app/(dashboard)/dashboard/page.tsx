@@ -1,23 +1,27 @@
 "use client";
 
+import { useEffect, useState, useCallback } from 'react';
+import { PanelLeftClose, PanelRightClose, Layout as LayoutDashboard } from "lucide-react";
+import BracketsIcon from "@/components/icons/brackets";
+import mockDataJson from "@/mock.json";
+import type { MockData } from "@/types/dashboard";
+
+// Components
 import DashboardPageLayout from "@/components/dashboard/layout";
 import DashboardStat from "@/components/dashboard/stat";
 import DashboardChart from "@/components/dashboard/chart";
 import RebelsRanking from "@/components/dashboard/rebels-ranking";
 import SecurityStatus from "@/components/dashboard/security-status";
 import TodoList from "@/components/dashboard/todo-list";
-import BracketsIcon from "@/components/icons/brackets";
+import NextClass from "@/components/dashboard/next-class";
+
+// Icons
 import GearIcon from "@/components/icons/gear";
 import ProcessorIcon from "@/components/icons/proccesor";
 import BoomIcon from "@/components/icons/boom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PanelLeftClose, PanelRightClose, LayoutDashboard } from "lucide-react";
-import { useState, useEffect } from "react";
-import mockDataJson from "@/mock.json";
-import type { MockData } from "@/types/dashboard";
-import NextClass from "@/components/dashboard/next-class";
 
 const mockData = mockDataJson as MockData;
 
@@ -31,22 +35,35 @@ const iconMap = {
 export default function DashboardOverview() {
   const [isMobile, setIsMobile] = useState(false);
   const [showTodoPanel, setShowTodoPanel] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Set mounted state
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // Handle mobile responsiveness
+  const checkIfMobile = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      setIsMobile(window.innerWidth < 1024);
+    }
+  }, []);
 
   useEffect(() => {
-    // Check if mobile on mount and on resize
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // lg breakpoint
-    };
+    if (!isMounted) return;
     
     // Initial check
     checkIfMobile();
     
-    // Add event listener
+    // Add event listeners
     window.addEventListener('resize', checkIfMobile);
     
     // Cleanup
-    return () => window.removeEventListener('resize', checkIfMobile);
-  }, []);
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, [checkIfMobile, isMounted]);
 
   // Toggle todo panel visibility on mobile
   const toggleTodoPanel = () => {
