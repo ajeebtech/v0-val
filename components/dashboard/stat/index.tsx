@@ -69,17 +69,14 @@ export default function DashboardStat({
 
       <CardContent className="bg-accent flex-1 pt-2 md:pt-6 overflow-clip relative">
         <div className="flex items-center">
-          <span className="text-4xl md:text-5xl font-display">
-            {isNumeric ? (
-              <NumberFlow
-                value={numericValue}
-                prefix={prefix}
-                suffix={suffix}
-              />
-            ) : (
-              value
-            )}
-          </span>
+          <div 
+            className="text-4xl md:text-5xl font-display"
+            dangerouslySetInnerHTML={{
+              __html: isNumeric 
+                ? `${prefix}${numericValue}${suffix}`
+                : value.replace(/\n/g, '<br/>')
+            }}
+          />
           {tag && (
             <Badge variant="default" className="uppercase ml-3">
               {tag}

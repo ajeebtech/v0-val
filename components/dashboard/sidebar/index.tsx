@@ -18,6 +18,7 @@ import ProcessorIcon from "@/components/icons/proccesor";
 import CuteRobotIcon from "@/components/icons/cute-robot";
 import EmailIcon from "@/components/icons/email";
 import GearIcon from "@/components/icons/gear";
+import { Gamepad2 } from 'lucide-react';
 import UserMenu from "@/components/auth/UserMenu";
 
 const sidebarItems = [
@@ -50,6 +51,11 @@ const sidebarItems = [
     title: "Communication",
     url: "/communication",
     icon: EmailIcon,
+  },
+  {
+    title: "Valorant Matches",
+    url: "/valorant",
+    icon: Gamepad2,
   },
   {
     title: "Admin Settings",

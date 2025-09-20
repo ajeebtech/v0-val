@@ -74,6 +74,7 @@ interface ClassInfo {
   isCurrentClass: boolean;
   timeDisplay: string;
   isTomorrow?: boolean;
+  dayOfWeek?: string;
 }
 
 export default function NextClass() {
@@ -126,25 +127,33 @@ export default function NextClass() {
         }
       }
       
-      // If no more classes today, find first class tomorrow
-      const tomorrowIndex = (currentTime.getDay() + 1) % 7;
-      const tomorrow = dayOfWeek[tomorrowIndex];
-      const tomorrowClasses = timetableData[tomorrow] || [];
+      // If no more classes today, find next class in the week
+      const currentDayIndex = currentTime.getDay();
       
-      if (tomorrowClasses.length > 0) {
-        const firstClass = tomorrowClasses[0];
-        const [className, room] = firstClass.class.split(' ');
-        setNextClass({
-          time: firstClass.time,
-          className,
-          room,
-          isCurrentClass: false,
-          timeDisplay: firstClass.time,
-          isTomorrow: true
-        });
-      } else {
-        setNextClass(null);
+      // Check next 7 days (including today in case we need to wrap around)
+      for (let i = 1; i <= 7; i++) {
+        const nextDayIndex = (currentDayIndex + i) % 7;
+        const nextDay = dayOfWeek[nextDayIndex];
+        const nextDayClasses = timetableData[nextDay] || [];
+        
+        if (nextDayClasses.length > 0) {
+          const nextClass = nextDayClasses[0];
+          const [className, room] = nextClass.class.split(' ');
+          setNextClass({
+            time: nextClass.time,
+            className,
+            room,
+            isCurrentClass: false,
+            timeDisplay: nextClass.time,
+            isTomorrow: i === 1, // Only mark as tomorrow if it's the next day
+            dayOfWeek: nextDay // Add day of week to display
+          });
+          return;
+        }
       }
+      
+      // If we get here, there are no more classes scheduled
+      setNextClass(null);
     } catch (err) {
       console.error('Error updating next class:', err);
       setNextClass(null);
@@ -162,7 +171,12 @@ export default function NextClass() {
         <div className="flex justify-between items-start">
           <div>
             <p className="text-white font-medium">{nextClass?.className || 'No classes found'}</p>
-            <p className="text-sm text-gray-400">{nextClass?.room || 'Check back later'}</p>
+            <p className="text-sm text-gray-400">
+              {nextClass?.room || 'Check back later'}
+              {nextClass?.dayOfWeek && !nextClass?.isTomorrow && (
+                <span className="ml-2 text-xs text-gray-500">({nextClass.dayOfWeek})</span>
+              )}
+            </p>
           </div>
           <div className="text-right">
             <p className="text-sm text-white font-mono">

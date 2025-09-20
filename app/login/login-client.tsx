@@ -5,6 +5,21 @@ import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import LoginForm from './login-form';
 
+// Add global styles for better cross-browser compatibility
+const globalStyles = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .spin-animation {
+    animation: spin 1s linear infinite;
+    -webkit-animation: spin 1s linear infinite;
+    -moz-animation: spin 1s linear infinite;
+    -ms-animation: spin 1s linear infinite;
+  }
+`;
+
 export default function LoginClient() {
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -44,24 +59,26 @@ export default function LoginClient() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-blue-500" />
+        <style jsx global>{globalStyles}</style>
+        <div className="h-8 w-8 rounded-full border-4 border-gray-200 border-t-blue-500 spin-animation" />
       </div>
     );
   }
 
-  // For debugging - show auth status
-  if (process.env.NODE_ENV !== 'production') {
-    const AuthStatus = require('@/components/AuthStatus').default;
-    return (
-      <div className="space-y-8">
-        <LoginForm redirectTo={redirectTo} />
-        <div className="max-w-md mx-auto">
-          <AuthStatus />
+  // Wrap in a container with hardware acceleration
+  return (
+    <div className="transform-gpu">
+      <style jsx global>{globalStyles}</style>
+      {process.env.NODE_ENV !== 'production' ? (
+        <div className="space-y-8">
+          <LoginForm redirectTo={redirectTo} />
+          <div className="max-w-md mx-auto">
+            {require('@/components/AuthStatus').default}
+          </div>
         </div>
-      </div>
-    );
-  }
-
-  // In production, just show the login form
-  return <LoginForm redirectTo={redirectTo} />;
+      ) : (
+        <LoginForm redirectTo={redirectTo} />
+      )}
+    </div>
+  );
 }

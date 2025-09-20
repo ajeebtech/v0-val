@@ -1,11 +1,32 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
+// Add input styles that work across browsers
+const inputStyles: React.CSSProperties = {
+  WebkitAppearance: 'none' as const,
+  MozAppearance: 'none' as const,
+  appearance: 'none' as const,
+  WebkitTapHighlightColor: 'transparent',
+  outline: 'none',
+};
+
+// Add button styles that work across browsers
+const buttonStyles: React.CSSProperties = {
+  WebkitAppearance: 'none' as const,
+  MozAppearance: 'none' as const,
+  appearance: 'none' as const,
+  WebkitTapHighlightColor: 'transparent',
+  WebkitUserSelect: 'none' as const,
+  MozUserSelect: 'none' as const,
+  msUserSelect: 'none' as const,
+  userSelect: 'none' as const,
+};
 
 export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: string }) {
   const [email, setEmail] = useState('');
@@ -68,6 +89,22 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: 
     }
   };
 
+  // Add a mounted state to prevent hydration issues
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+  
+  if (!mounted) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-4 border-gray-200 border-t-blue-500 spin-animation" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
@@ -85,7 +122,16 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: 
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form 
+            onSubmit={handleSubmit} 
+            className="space-y-6 max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg transform-gpu"
+            style={{
+              // Add transform for hardware acceleration
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              MozBackfaceVisibility: 'hidden',
+            }}
+          >
             <div className="space-y-2">
               <Label htmlFor="email" className="text-foreground">
                 Email
@@ -98,6 +144,7 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: 
                 placeholder="Enter your email"
                 className="w-full font-display"
                 required
+                style={inputStyles}
               />
             </div>
 
@@ -113,13 +160,15 @@ export default function LoginForm({ redirectTo = '/dashboard' }: { redirectTo?: 
                 placeholder="Enter your password"
                 className="w-full font-display"
                 required
+                style={inputStyles}
               />
             </div>
 
             <Button 
               type="submit" 
-              className="w-full mt-6"
+              className="w-full transition-colors duration-200"
               disabled={loading}
+              style={buttonStyles}
             >
               {loading ? (
                 <>

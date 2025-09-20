@@ -1,28 +1,19 @@
 {
   "dashboardStats": [
     {
-      "label": "ISSUES COMPLETED",
-      "value": "49%",
-      "description": "WEEKLY SCOPE",
-      "intent": "positive",
-      "icon": "gear",
-      "direction": "up"
-    },
-    {
-      "label": "MINUTES LOST",
-      "value": "642'",
-      "description": "IN MEETINGS AND RABBIT HOLES",
+      "label": "VALORANT GAMES NEXT",
+      "value": "G2 VS RRQ",
+      "description": "in 8h 31m",
       "intent": "negative",
       "icon": "proccesor",
       "direction": "down"
     },
     {
-      "label": "ACCIDENTS",
+      "label": "LIVE",
       "value": "0",
       "description": "THE CLIENT ALWAYS IS RIGHT",
       "intent": "neutral",
-      "icon": "boom",
-      "tag": "4 weeks 🔥"
+      "icon": "boom"
     }
   ],
   "chartData": {
