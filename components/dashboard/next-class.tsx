@@ -77,24 +77,21 @@ interface ClassInfo {
   dayOfWeek?: string;
 }
 
-export default function NextClass() {
+interface NextClassProps {
+  lastUpdated?: Date | null;
+}
+
+export default function NextClass({ lastUpdated }: NextClassProps) {
   const [nextClass, setNextClass] = useState<ClassInfo | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    // Update time every minute
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-      updateNextClass();
-    }, 60000);
-
-    // Initial update
     updateNextClass();
-
-    return () => clearInterval(timer);
-  }, []);
+  }, [lastUpdated]);
 
   const updateNextClass = () => {
+    const now = new Date();
+    setCurrentTime(now);
     try {
       const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const today = dayOfWeek[currentTime.getDay()];

@@ -11,6 +11,7 @@
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
     "@eslint/eslintrc": "latest",
+    "@google/generative-ai": "^0.24.1",
     "@heroui/react": "^2.8.4",
     "@heroui/spinner": "^2.2.23",
     "@hookform/resolvers": "^3.10.0",

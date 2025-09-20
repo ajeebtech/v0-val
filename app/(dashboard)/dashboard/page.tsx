@@ -45,40 +45,39 @@ export default function DashboardOverview() {
     liveMatch: DashboardMatchInfo | null;
   }>({ nextMatch: null, followingMatch: null, liveMatch: null });
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  // Set mounted state and fetch match data
+  // Fetch match data function
+  const fetchMatchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [upcomingMatches, liveMatch] = await Promise.all([
+        getUpcomingMatch(),
+        getLiveMatch()
+      ]);
+      
+      setMatchStats({
+        nextMatch: upcomingMatches.nextMatch,
+        followingMatch: upcomingMatches.followingMatch,
+        liveMatch
+      });
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error('Error fetching match data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Initial data fetch
   useEffect(() => {
-    const fetchMatchData = async () => {
-      try {
-        setIsLoading(true);
-        const [upcomingMatches, liveMatch] = await Promise.all([
-          getUpcomingMatch(),
-          getLiveMatch()
-        ]);
-        
-        setMatchStats({
-          nextMatch: upcomingMatches.nextMatch,
-          followingMatch: upcomingMatches.followingMatch,
-          liveMatch
-        });
-      } catch (error) {
-        console.error('Error fetching match data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     setIsMounted(true);
     fetchMatchData();
     
-    // Refresh match data every 5 minutes
-    const interval = setInterval(fetchMatchData, 5 * 60 * 1000);
-    
     return () => {
-      clearInterval(interval);
       setIsMounted(false);
     };
-  }, []);
+  }, [fetchMatchData]);
 
   // Handle mobile responsiveness
   const checkIfMobile = useCallback(() => {
@@ -133,12 +132,34 @@ export default function DashboardOverview() {
       )}
 
       <div className="flex flex-col gap-6">
+        {/* Manual Refresh Button */}
+        <div className="flex justify-end">
+          <Button 
+            onClick={fetchMatchData}
+            variant="outline"
+            size="sm"
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            {isLoading ? (
+              <span>Refreshing...</span>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-rotate-ccw">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                  <path d="M3 3v5h5"/>
+                </svg>
+                <span>Refresh Data</span>
+              </>
+            )}
+          </Button>
+        </div>
         {/* Main Content */}
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
             {/* Next Class Card */}
             <div className="bg-black rounded-xl border border-gray-800 p-5">
-              <NextClass />
+              <NextClass lastUpdated={lastUpdated} />
             </div>
             
             {/* Next Match */}
