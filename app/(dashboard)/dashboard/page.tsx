@@ -25,6 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MatchStats } from "@/components/dashboard/match-stats";
 
 const mockData = mockDataJson as MockData;
 
@@ -187,15 +188,10 @@ export default function DashboardOverview() {
             )}
             
             {/* Live Match */}
-            {matchStats.liveMatch && (
-              <DashboardStat 
-                key="live-match"
-                label={matchStats.liveMatch.label}
-                value={matchStats.liveMatch.value}
-                description={matchStats.liveMatch.description}
-                intent={matchStats.liveMatch.intent === 'danger' ? 'negative' : matchStats.liveMatch.intent}
-                icon={iconMap[matchStats.liveMatch.icon as keyof typeof iconMap] || BracketsIcon}
-              />
+            {matchStats.liveMatch && matchStats.liveMatch.matchData && (
+              <div className="md:col-span-2 lg:col-span-3">
+                <MatchStats matchData={matchStats.liveMatch.matchData} />
+              </div>
             )}
           </div>
 
