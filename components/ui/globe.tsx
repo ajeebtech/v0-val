@@ -8,120 +8,140 @@ import { cn } from "@/lib/utils";
 
 const MOVEMENT_DAMPING = 1400;
 
+// Chennai coordinates
+const CHENNAI_LAT = 13.0827;
+const CHENNAI_LNG = 80.2707;
+
 const GLOBE_CONFIG: COBEOptions = {
   width: 800,
   height: 800,
   onRender: () => {},
   devicePixelRatio: 2,
-  phi: 0,
-  theta: 0.3,
-  dark: 0,
-  diffuse: 0.4,
+  // Offset the view to center near Chennai
+  phi: CHENNAI_LAT * (Math.PI / 180) * 0.4, // Slight vertical offset
+  theta: -CHENNAI_LNG * (Math.PI / 180) * 0.4, // Slight horizontal offset
+  dark: 0,  // Disable dark mode for white land
+  diffuse: 1.8,  // Increase diffuse for better contrast
   mapSamples: 16000,
-  mapBrightness: 1.2,
-  baseColor: [1, 1, 1],
-  markerColor: [251 / 255, 100 / 255, 21 / 255],
-  glowColor: [1, 1, 1],
+  mapBrightness: 2.5,  // Increase brightness for whiter land
+  baseColor: [1, 1, 1],  // White base for land
+  markerColor: [251 / 255, 100 / 255, 21 / 255],  // Keep the marker color
+  glowColor: [0, 0, 0],  // Black glow for contrast
   markers: [
-    { location: [14.5995, 120.9842], size: 0.03 },
-    { location: [19.076, 72.8777], size: 0.1 },
-    { location: [23.8103, 90.4125], size: 0.05 },
-    { location: [30.0444, 31.2357], size: 0.07 },
-    { location: [39.9042, 116.4074], size: 0.08 },
-    { location: [-23.5505, -46.6333], size: 0.1 },
-    { location: [19.4326, -99.1332], size: 0.1 },
-    { location: [40.7128, -74.006], size: 0.1 },
-    { location: [34.6937, 135.5022], size: 0.05 },
-    { location: [41.0082, 28.9784], size: 0.06 },
+    { 
+      location: [CHENNAI_LAT, CHENNAI_LNG], 
+      size: 0.1,
+      color: [251 / 255, 100 / 255, 21 / 255] // Orange color for the marker
+    },
   ],
 };
 
-export function Globe({
-  className,
-  config = GLOBE_CONFIG,
-}: {
-  className?: string;
-  config?: COBEOptions;
-}) {
-  let phi = 0;
-  let width = 0;
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export function Globe({ className, config = GLOBE_CONFIG }: { className?: string; config?: COBEOptions }) {
   const pointerInteracting = useRef<number | null>(null);
   const pointerInteractionMovement = useRef(0);
-
-  const r = useMotionValue(0);
-  const rs = useSpring(r, {
-    mass: 1,
-    damping: 30,
-    stiffness: 100,
-  });
-
-  const updatePointerInteraction = (value: number | null) => {
-    pointerInteracting.current = value;
-    if (canvasRef.current) {
-      canvasRef.current.style.cursor = value !== null ? "grabbing" : "grab";
-    }
-  };
-
-  const updateMovement = (clientX: number) => {
-    if (pointerInteracting.current !== null) {
-      const delta = clientX - pointerInteracting.current;
-      pointerInteractionMovement.current = delta;
-      r.set(r.get() + delta / MOVEMENT_DAMPING);
-    }
-  };
+  const basePhi = CHENNAI_LAT * (Math.PI / 180) * 0.4; // Base phi for Chennai
+  const baseTheta = -CHENNAI_LNG * (Math.PI / 180) * 0.4; // Base theta for Chennai
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const currentPhi = useMotionValue(0);
+  const currentTheta = useMotionValue(0);
+  const phiSpring = useSpring(currentPhi, { damping: 100, stiffness: 100 });
+  const thetaSpring = useSpring(currentTheta, { damping: 100, stiffness: 100 });
+  // Removed unused refs
 
   useEffect(() => {
+    if (!canvasRef.current) return;
+
+    let width = 0;
+    
     const onResize = () => {
       if (canvasRef.current) {
         width = canvasRef.current.offsetWidth;
       }
     };
-
-    window.addEventListener("resize", onResize);
+    
+    window.addEventListener('resize', onResize);
     onResize();
 
-    const globe = createGlobe(canvasRef.current!, {
+    const handlePointerDown = (e: PointerEvent) => {
+      pointerInteracting.current = e.clientX - pointerInteractionMovement.current;
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = 'grabbing';
+      }
+    };
+
+    const handlePointerUp = () => {
+      pointerInteracting.current = null;
+      if (canvasRef.current) {
+        canvasRef.current.style.cursor = 'grab';
+      }
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (pointerInteracting.current !== null) {
+        const delta = e.clientX - pointerInteracting.current;
+        pointerInteractionMovement.current = delta;
+        currentTheta.set(baseTheta + (delta / 200));
+      }
+    };
+
+    canvasRef.current.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointermove', handlePointerMove);
+
+    const globe = createGlobe(canvasRef.current, {
       ...config,
       width: width * 2,
       height: width * 2,
+      phi: basePhi,
+      theta: baseTheta,
       onRender: (state) => {
-        if (!pointerInteracting.current) phi += 0.005;
-        state.phi = phi + rs.get();
-        state.width = width * 2;
-        state.height = width * 2;
+        // Oscillate around Chennai
+        const time = Date.now() * 0.001;
+        const oscillation = Math.sin(time * 0.3) * 0.15; // Gentle oscillation
+        
+        state.phi = basePhi + Math.sin(time * 0.1) * 0.1; // Vertical oscillation
+        state.theta = baseTheta + oscillation; // Horizontal oscillation
+        
+        // Update motion values
+        currentPhi.set(state.phi);
+        currentTheta.set(state.theta);
       },
     });
 
-    setTimeout(() => (canvasRef.current!.style.opacity = "1"), 0);
     return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      if (canvasRef.current) {
+        canvasRef.current.removeEventListener('pointerdown', handlePointerDown);
+      }
       globe.destroy();
-      window.removeEventListener("resize", onResize);
     };
-  }, [rs, config]);
+  }, [config]);
 
   return (
     <div
       className={cn(
-        "absolute inset-0 mx-auto aspect-[1/1] w-full max-w-[600px]",
-        className,
+        "relative h-full w-full overflow-hidden rounded-full",
+        className
       )}
+      style={{
+        cursor: 'grab',
+      }}
+      onPointerDown={() => {
+        if (canvasRef.current) {
+          canvasRef.current.style.cursor = 'grabbing';
+        }
+      }}
+      onPointerUp={() => {
+        if (canvasRef.current) {
+          canvasRef.current.style.cursor = 'grab';
+        }
+      }}
     >
       <canvas
-        className={cn(
-          "size-full opacity-0 transition-opacity duration-500 [contain:layout_paint_size]",
-        )}
         ref={canvasRef}
-        onPointerDown={(e) => {
-          pointerInteracting.current = e.clientX;
-          updatePointerInteraction(e.clientX);
-        }}
-        onPointerUp={() => updatePointerInteraction(null)}
-        onPointerOut={() => updatePointerInteraction(null)}
-        onMouseMove={(e) => updateMovement(e.clientX)}
-        onTouchMove={(e) =>
-          e.touches[0] && updateMovement(e.touches[0].clientX)
-        }
+        className="h-full w-full"
       />
     </div>
   );
