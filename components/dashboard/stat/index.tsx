@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import NumberFlow from "@number-flow/react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,47 +15,55 @@ interface DashboardStatProps {
   direction?: "up" | "down";
 }
 
-export default function DashboardStat({
+// Extract prefix, numeric value, and suffix from the value string
+const parseValue = (val: string) => {
+  // Match pattern: optional prefix + number + optional suffix
+  const match = val.match(/^([^\d.-]*)([+-]?\d*\.?\d+)([^\d]*)$/);
+
+  if (match) {
+    const [, prefix, numStr, suffix] = match;
+    return {
+      prefix: prefix || "",
+      numericValue: parseFloat(numStr),
+      suffix: suffix || "",
+      isNumeric: !isNaN(parseFloat(numStr)),
+    };
+  }
+
+  return {
+    prefix: "",
+    numericValue: 0,
+    suffix: val,
+    isNumeric: false,
+  };
+};
+
+const getIntentClassName = (intent?: string) => {
+  if (intent === "positive") return "text-success";
+  if (intent === "negative") return "text-destructive";
+  return "text-muted-foreground";
+};
+
+function DashboardStatComponent({
   label,
   value,
   description,
-  icon,
+  icon: Icon,
   tag,
   intent,
   direction,
 }: DashboardStatProps) {
-  const Icon = icon;
+  // Memoize the parsed value to avoid recalculating on every render
+  const { prefix, numericValue, suffix, isNumeric } = useMemo(
+    () => parseValue(value),
+    [value]
+  );
 
-  // Extract prefix, numeric value, and suffix from the value string
-  const parseValue = (val: string) => {
-    // Match pattern: optional prefix + number + optional suffix
-    const match = val.match(/^([^\d.-]*)([+-]?\d*\.?\d+)([^\d]*)$/);
-
-    if (match) {
-      const [, prefix, numStr, suffix] = match;
-      return {
-        prefix: prefix || "",
-        numericValue: parseFloat(numStr),
-        suffix: suffix || "",
-        isNumeric: !isNaN(parseFloat(numStr)),
-      };
-    }
-
-    return {
-      prefix: "",
-      numericValue: 0,
-      suffix: val,
-      isNumeric: false,
-    };
-  };
-
-  const getIntentClassName = () => {
-    if (intent === "positive") return "text-success";
-    if (intent === "negative") return "text-destructive";
-    return "text-muted-foreground";
-  };
-
-  const { prefix, numericValue, suffix, isNumeric } = parseValue(value);
+  // Memoize the intent class name
+  const intentClassName = useMemo(
+    () => getIntentClassName(intent),
+    [intent]
+  );
 
   return (
     <Card className="relative overflow-hidden">
@@ -161,3 +169,21 @@ const Arrow = ({ direction, index }: ArrowProps) => {
     </span>
   );
 };
+
+// Memoize the component to prevent unnecessary re-renders
+const DashboardStat = memo(DashboardStatComponent, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.label === nextProps.label &&
+    prevProps.value === nextProps.value &&
+    prevProps.description === nextProps.description &&
+    prevProps.intent === nextProps.intent &&
+    prevProps.tag === nextProps.tag
+  );
+});
+
+// Export as default
+export default DashboardStat;
+
+// Export the props type
+export type { DashboardStatProps };

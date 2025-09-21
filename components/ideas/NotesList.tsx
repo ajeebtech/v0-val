@@ -57,19 +57,6 @@ export function NotesList() {
   const [isSaving, setIsSaving] = useState(false);
   const [guestId, setGuestId] = useState<string>('');
 
-  // Initialize guest ID from localStorage or create a new one
-  const initializeGuestId = useCallback(() => {
-    const storedGuestId = localStorage.getItem('guest_id');
-    if (storedGuestId) {
-      setGuestId(storedGuestId);
-      fetchNotes(storedGuestId);
-    } else {
-      const newGuestId = `guest_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('guest_id', newGuestId);
-      setGuestId(newGuestId);
-    }
-  }, []);
-
   const fetchNotes = useCallback(async (guestId: string) => {
     if (!guestId) {
       console.log('No guest ID available yet');
@@ -80,16 +67,25 @@ export function NotesList() {
       setIsLoading(true);
       console.log('Fetching notes for guest:', guestId);
       
-      // First, try a direct query to the notes table
-      const { data, error } = await supabase
+      // First, try a direct query to get all notes
+      console.log('Fetching all notes...');
+      const { data, error, count } = await supabase
         .from('notes')
         .select('*')
-        .eq('guest_id', guestId)
         .order('updated_at', { ascending: false });
+        
+      console.log(`Found ${data?.length || 0} total notes in database`);
       
       if (error) {
-        console.error('Direct query failed, trying RPC...');
+        console.error('Direct query error:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        
         // If direct query fails, try the RPC function
+        console.log('Trying RPC function as fallback...');
         const { data: rpcData, error: rpcError } = await supabase
           .rpc('get_guest_notes', { p_guest_id: guestId });
           
@@ -100,13 +96,28 @@ export function NotesList() {
             hint: rpcError.hint,
             code: rpcError.code
           });
-          throw rpcError;
+          
+          // Try a raw SQL query as a last resort
+          console.log('Trying raw SQL query...');
+          const { data: rawData, error: rawError } = await supabase
+            .from('notes')
+            .select('*')
+            .or(`guest_id.eq.${guestId}`);
+            
+          if (rawError) {
+            console.error('Raw SQL query failed:', rawError);
+            throw rawError;
+          }
+          
+          console.log(`Fetched ${rawData?.length || 0} notes via raw SQL`);
+          setNotes(Array.isArray(rawData) ? rawData : []);
+        } else {
+          console.log(`Fetched ${rpcData?.length || 0} notes via RPC`);
+          setNotes(Array.isArray(rpcData) ? rpcData : []);
         }
-        
-        console.log('Fetched notes via RPC:', rpcData);
-        setNotes(Array.isArray(rpcData) ? rpcData : []);
       } else {
-        console.log('Fetched notes directly:', data);
+        console.log(`Successfully fetched ${data?.length || 0} notes directly`);
+        console.log('Sample note data:', data?.[0]);
         setNotes(Array.isArray(data) ? data : []);
       }
     } catch (error) {
@@ -116,44 +127,106 @@ export function NotesList() {
         guestId,
         time: new Date().toISOString()
       });
+      
+      // Set empty array to prevent loading state from persisting
+      setNotes([]);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    // Only initialize if we don't have a guest ID yet
-    if (!guestId) {
-      initializeGuestId();
-    } else {
-      // If we already have a guest ID, fetch notes
-      fetchNotes(guestId);
-    }
-  }, [guestId, initializeGuestId, fetchNotes]);
-
-  // Set up real-time subscription
-  useEffect(() => {
-    if (!guestId) return;
-    
-    const channel = supabase
-      .channel('notes_changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'notes',
-          filter: `guest_id=eq.${guestId}`
-        }, 
-        () => {
-          fetchNotes(guestId);
+  // Initialize guest ID from localStorage or create a new one
+  const initializeGuestId = useCallback(() => {
+    try {
+      const storedGuestId = localStorage.getItem('guest_id');
+      if (storedGuestId) {
+        console.log('Found existing guest ID in localStorage:', storedGuestId);
+        setGuestId(storedGuestId);
+        fetchNotes(storedGuestId).catch(error => {
+          console.error('Error in initial notes fetch:', error);
+        });
+      } else {
+        const newGuestId = `guest_${Math.random().toString(36).substr(2, 9)}`;
+        console.log('Generated new guest ID:', newGuestId);
+        try {
+          localStorage.setItem('guest_id', newGuestId);
+          setGuestId(newGuestId);
+        } catch (error) {
+          console.error('Error saving guest ID to localStorage:', error);
+          // Continue with the ID even if localStorage fails
+          setGuestId(newGuestId);
         }
-      )
-      .subscribe();
+      }
+    } catch (error) {
+      console.error('Error initializing guest ID:', error);
+      // Fallback to a random ID if something goes wrong
+      const fallbackId = `guest_${Math.random().toString(36).substr(2, 9)}`;
+      setGuestId(fallbackId);
+    }
+  }, [fetchNotes]);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [guestId, fetchNotes]);
+  // Initialize guest ID and fetch notes on component mount
+  useEffect(() => {
+    console.log('Component mounted, initializing guest ID...');
+    initializeGuestId();
+    
+    // Set up real-time subscription
+    if (guestId) {
+      console.log('Setting up real-time subscription for guest:', guestId);
+      
+      const channel = supabase
+        .channel('notes_changes')
+        .on(
+          'postgres_changes',
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'notes',
+            filter: `guest_id=eq.${guestId}`
+          }, 
+          (payload) => {
+            console.log('Received real-time update:', payload);
+            fetchNotes(guestId).catch(error => {
+              console.error('Error in real-time update handler:', error);
+            });
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status);
+          if (status === 'CHANNEL_ERROR') {
+            console.error('Error in real-time channel');
+            // Try to resubscribe on error
+            setTimeout(() => {
+              console.log('Attempting to resubscribe...');
+              channel.unsubscribe().then(() => {
+                channel.subscribe();
+              });
+            }, 1000);
+          }
+        });
+
+      // Initial fetch
+      console.log('Performing initial notes fetch...');
+      fetchNotes(guestId).catch(error => {
+        console.error('Initial notes fetch failed:', error);
+      });
+
+      return () => {
+        console.log('Cleaning up real-time subscription');
+        supabase.removeChannel(channel).then(() => {
+          console.log('Successfully removed channel');
+        }).catch(error => {
+          console.error('Error removing channel:', error);
+        });
+      };
+    }
+  }, [guestId]);
+
+  // Debug effect to log notes changes
+  useEffect(() => {
+    console.log('Notes updated. Count:', notes.length);
+    console.log('Current notes:', notes);
+  }, [notes]);
 
   const handleAddNote = () => {
     setCurrentNote({

@@ -18,10 +18,9 @@ import TodoList from "@/components/dashboard/todo-list";
 import NextClass from "@/components/dashboard/next-class";
 
 // Icons
-import GearIcon from "@/components/icons/gear";
-import ProcessorIcon from "@/components/icons/proccesor";
-import BoomIcon from "@/components/icons/boom";
+import { Settings as Gear, Cpu, Bomb } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { memo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,14 +28,16 @@ import { MatchStats } from "@/components/dashboard/match-stats";
 
 const mockData = mockDataJson as MockData;
 
-// Icon mapping
+// Memoized icon mapping
 const iconMap = {
-  gear: GearIcon,
-  proccesor: ProcessorIcon,
-  boom: BoomIcon,
-};
+  gear: Gear,
+  proccesor: Cpu,
+  boom: Bomb,
+} as const;
 
-export default function DashboardOverview() {
+// The DashboardStat component is already memoized with proper prop comparison
+
+function DashboardOverview() {
   const [isMobile, setIsMobile] = useState(false);
   const [showTodoPanel, setShowTodoPanel] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -57,18 +58,23 @@ export default function DashboardOverview() {
         getLiveMatch()
       ]);
       
-      setMatchStats({
-        nextMatch: upcomingMatches.nextMatch,
-        followingMatch: upcomingMatches.followingMatch,
-        liveMatch
-      });
-      setLastUpdated(new Date());
+      // Only update state if component is still mounted
+      if (isMounted) {
+        setMatchStats({
+          nextMatch: upcomingMatches.nextMatch,
+          followingMatch: upcomingMatches.followingMatch,
+          liveMatch
+        });
+        setLastUpdated(new Date());
+      }
     } catch (error) {
       console.error('Error fetching match data:', error);
     } finally {
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
-  }, []);
+  }, [isMounted]);
 
   // Initial data fetch
   useEffect(() => {
@@ -163,26 +169,26 @@ export default function DashboardOverview() {
               <NextClass lastUpdated={lastUpdated} />
             </div>
             
-            {/* Next Match */}
+            {/* Next Match - Memoized */}
             {matchStats.nextMatch && (
               <DashboardStat 
                 key="next-match"
                 label={matchStats.nextMatch.label}
                 value={matchStats.nextMatch.value}
                 description={matchStats.nextMatch.description}
-                intent={matchStats.nextMatch.intent === 'danger' ? 'negative' : matchStats.nextMatch.intent}
+                intent={matchStats.nextMatch.intent === 'danger' ? 'negative' : undefined}
                 icon={iconMap[matchStats.nextMatch.icon as keyof typeof iconMap] || BracketsIcon}
               />
             )}
             
-            {/* Following Match */}
+            {/* Following Match - Memoized */}
             {matchStats.followingMatch && (
               <DashboardStat 
                 key="following-match"
                 label={matchStats.followingMatch.label}
                 value={matchStats.followingMatch.value}
                 description={matchStats.followingMatch.description}
-                intent={matchStats.followingMatch.intent === 'danger' ? 'negative' : matchStats.followingMatch.intent}
+                intent={matchStats.followingMatch.intent === 'danger' ? 'negative' : undefined}
                 icon={iconMap[matchStats.followingMatch.icon as keyof typeof iconMap] || BracketsIcon}
               />
             )}
@@ -220,3 +226,5 @@ export default function DashboardOverview() {
     </DashboardPageLayout>
   );
 }
+
+export default DashboardOverview;
