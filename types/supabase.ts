@@ -21,6 +21,7 @@ export interface Database {
           is_completed: boolean;
           created_at: string;
           updated_at?: string | null;
+          position: number;
         };
         Insert: {
           id?: string;
@@ -29,6 +30,7 @@ export interface Database {
           is_completed?: boolean;
           created_at?: string;
           updated_at?: string | null;
+          position?: number;
         };
         Update: {
           id?: string;
@@ -37,6 +39,7 @@ export interface Database {
           is_completed?: boolean;
           created_at?: string;
           updated_at?: string | null;
+          position?: number;
         };
       };
     };
