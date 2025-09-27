@@ -129,19 +129,24 @@ export default function TodoList() {
     }
   };
 
-  // Update the order of todos in the database
-  const updateTodosOrder = async (updatedTodos: Todo[]) => {
-    const updates = updatedTodos.map((todo, index) => ({
-      id: todo.id,
-      position: index + 1
-    }));
-
+  const updateTodosOrder = async (reorderedTodos: Todo[]) => {
     try {
+      // Prepare updates for all todos with their new positions
+      const updates = reorderedTodos.map((todo, index) => ({
+        id: todo.id,
+        position: index + 1, // 1-based index
+        updated_at: new Date().toISOString() // Ensure updated_at is set
+      }));
+  
+      // Update todos
       const { error } = await supabase
         .from('todos')
         .upsert(updates, { onConflict: 'id' });
-
-      if (error) throw error;
+  
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
       // Update local state with new positions
       setTodos(prev => 

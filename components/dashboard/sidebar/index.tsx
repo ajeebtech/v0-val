@@ -14,11 +14,11 @@ import LockIcon from "@/components/icons/lock";
 import MonkeyIcon from "@/components/icons/monkey";
 import BracketsIcon from "@/components/icons/brackets";
 import AtomIcon from "@/components/icons/atom";
-import ProcessorIcon from "@/components/icons/proccesor";
+import { Code2, Gamepad2 } from 'lucide-react';
 import CuteRobotIcon from "@/components/icons/cute-robot";
 import EmailIcon from "@/components/icons/email";
 import GearIcon from "@/components/icons/gear";
-import { Gamepad2 } from 'lucide-react';
+import { Typewriter } from "@/components/ui/typewriter";
 import UserMenu from "@/components/auth/UserMenu";
 import { GlobeDemo } from "../globe-demo";
 
@@ -34,19 +34,14 @@ const sidebarItems = [
     icon: AtomIcon,
   },
   {
+    title: "Scripts",
+    url: "/scripts",
+    icon: Code2,
+  },
+  {
     title: "Laboratory",
     url: "/laboratory",
     icon: AtomIcon,
-  },
-  {
-    title: "Devices",
-    url: "/devices",
-    icon: ProcessorIcon,
-  },
-  {
-    title: "Security",
-    url: "/security",
-    icon: CuteRobotIcon,
   },
   {
     title: "Communication",
@@ -79,7 +74,9 @@ export function DashboardSidebar({
           <MonkeyIcon className="size-10 group-hover:scale-[1.7] origin-top-left transition-transform" />
         </div>
         <div className="grid flex-1 text-left text-sm leading-tight">
-          <span className="text-2xl font-display">garage</span>
+          <span className="text-2xl font-display">
+            <Typewriter text="garage" speed={100} />
+          </span>
           <span className="text-xs uppercase">the world is yours</span>
         </div>
       </SidebarHeader>
