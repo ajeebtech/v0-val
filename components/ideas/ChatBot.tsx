@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 
 type Message = {
   role: 'user' | 'assistant';
@@ -37,26 +37,39 @@ export function ChatBot() {
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+      const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
       if (!apiKey) {
-        throw new Error('Gemini API key is not configured');
+        throw new Error('OpenRouter API key is not configured');
       }
 
-      // Initialize the Google Generative AI client
-      const genAI = new GoogleGenerativeAI(apiKey);
+      const openai = new OpenAI({
+        baseURL: 'https://openrouter.ai/api/v1',
+        apiKey: apiKey,
+        defaultHeaders: {
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'v0-val',
+        },
+      });
+
+      const completion = await openai.chat.completions.create({
+        model: 'openai/gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful assistant. The current date is ${new Date().toLocaleDateString()}.`
+          },
+          {
+            role: 'user',
+            content: input
+          }
+        ],
+      });
       
-      // Use the correct model name
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-      
-      // Generate content using the model
-      const prompt = `You are a helpful assistant. The current date is ${new Date().toLocaleDateString()}. ${input}`;
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const botResponse = response.text();
+      const botResponse = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
       
       setMessages((prev) => [...prev, { role: 'assistant', content: botResponse }]);
     } catch (error) {
-      console.error('Error calling Gemini API:', error);
+      console.error('Error calling OpenRouter API:', error);
       setMessages((prev) => [...prev, { 
         role: 'assistant', 
         content: 'Sorry, there was an error processing your request. Please try again later.' 
