@@ -42,6 +42,58 @@ export interface Database {
           position?: number;
         };
       };
+      tweets: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          count: number;
+          created_at: string;
+          updated_at?: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date: string;
+          count?: number;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          count?: number;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+      };
+      reels: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          count: number;
+          created_at: string;
+          updated_at?: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date: string;
+          count?: number;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          date?: string;
+          count?: number;
+          created_at?: string;
+          updated_at?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

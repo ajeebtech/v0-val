@@ -31,45 +31,51 @@ export function ChatBot() {
     e.preventDefault();
     if (!input.trim()) return;
 
+    console.log('Submitting message:', input);
     const userMessage: Message = { role: 'user', content: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+    
+    console.log('Environment variables:', {
+      hasApiKey: !!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY,
+      isClient: typeof window !== 'undefined'
+    });
 
     try {
-      const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-      if (!apiKey) {
-        throw new Error('OpenRouter API key is not configured');
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: input,
+          date: new Date().toLocaleDateString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get response');
       }
 
-      const openai = new OpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: apiKey,
-        defaultHeaders: {
-          'HTTP-Referer': window.location.href,
-          'X-Title': 'v0-val',
-        },
-      });
-
-      const completion = await openai.chat.completions.create({
-        model: 'openai/gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful assistant. The current date is ${new Date().toLocaleDateString()}.`
-          },
-          {
-            role: 'user',
-            content: input
-          }
-        ],
-      });
+      const completion = await response.json();
       
+      console.log('API Response:', completion);
       const botResponse = completion.choices[0]?.message?.content || 'Sorry, I could not generate a response.';
+      console.log('Bot Response:', botResponse);
       
       setMessages((prev) => [...prev, { role: 'assistant', content: botResponse }]);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error calling OpenRouter API:', error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { status?: number; statusText?: string; data?: unknown } };
+        console.error('API Error Response:', {
+          status: err.response?.status,
+          statusText: err.response?.statusText,
+          data: err.response?.data
+        });
+      }
       setMessages((prev) => [...prev, { 
         role: 'assistant', 
         content: 'Sorry, there was an error processing your request. Please try again later.' 

@@ -5,13 +5,13 @@ import { PanelLeftClose, PanelRightClose, Layout as LayoutDashboard } from "luci
 import BracketsIcon from "@/components/icons/brackets";
 import mockDataJson from "@/mock.json";
 import type { MockData } from "@/types/dashboard";
-import { DashboardMatchInfo } from "@/types/valorant";
-import { getUpcomingMatch, getLiveMatch } from "@/lib/valorant";
 
 // Components
 import DashboardPageLayout from "@/components/dashboard/layout";
 import DashboardStat from "@/components/dashboard/stat";
-import DashboardChart from "@/components/dashboard/chart";
+import TweetChart from "@/components/dashboard/tweet-chart";
+import TweetCounter from "@/components/dashboard/tweet-counter";
+import ReelsCounter from "@/components/dashboard/reels-counter";
 import RebelsRanking from "@/components/dashboard/rebels-ranking";
 import SecurityStatus from "@/components/dashboard/security-status";
 import TodoList from "@/components/dashboard/todo-list";
@@ -24,7 +24,6 @@ import { memo } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MatchStats } from "@/components/dashboard/match-stats";
 
 const mockData = mockDataJson as MockData;
 
@@ -41,50 +40,18 @@ function DashboardOverview() {
   const [isMobile, setIsMobile] = useState(false);
   const [showTodoPanel, setShowTodoPanel] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [matchStats, setMatchStats] = useState<{
-    nextMatch: DashboardMatchInfo | null;
-    followingMatch: DashboardMatchInfo | null;
-    liveMatch: DashboardMatchInfo | null;
-  }>({ nextMatch: null, followingMatch: null, liveMatch: null });
-  const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [chartRefreshTrigger, setChartRefreshTrigger] = useState(0);
 
-  // Fetch match data function
-  const fetchMatchData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [upcomingMatches, liveMatch] = await Promise.all([
-        getUpcomingMatch(),
-        getLiveMatch()
-      ]);
-      
-      // Only update state if component is still mounted
-      if (isMounted) {
-        setMatchStats({
-          nextMatch: upcomingMatches.nextMatch,
-          followingMatch: upcomingMatches.followingMatch,
-          liveMatch
-        });
-        setLastUpdated(new Date());
-      }
-    } catch (error) {
-      console.error('Error fetching match data:', error);
-    } finally {
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    }
-  }, [isMounted]);
-
-  // Initial data fetch
+  // Initial mount
   useEffect(() => {
     setIsMounted(true);
-    fetchMatchData();
+    setLastUpdated(new Date());
     
     return () => {
       setIsMounted(false);
     };
-  }, [fetchMatchData]);
+  }, []);
 
   // Handle mobile responsiveness
   const checkIfMobile = useCallback(() => {
@@ -113,6 +80,25 @@ function DashboardOverview() {
     setShowTodoPanel(!showTodoPanel);
   };
 
+  // Handle tweet count changes
+  const handleTweetCountChange = (count: number, date: string) => {
+    console.log('Tweet count changed:', { count, date });
+    // Trigger chart refresh
+    setChartRefreshTrigger(prev => prev + 1);
+  };
+
+  // Handle reels count changes
+  const handleReelsCountChange = (count: number, date: string) => {
+    console.log('Reels count changed:', { count, date });
+    // Trigger chart refresh
+    setChartRefreshTrigger(prev => prev + 1);
+  };
+
+  // Manual chart refresh function
+  const handleChartRefresh = () => {
+    setChartRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <DashboardPageLayout
       header={{
@@ -139,28 +125,6 @@ function DashboardOverview() {
       )}
 
       <div className="flex flex-col gap-6">
-        {/* Manual Refresh Button */}
-        <div className="flex justify-end">
-          <Button 
-            onClick={fetchMatchData}
-            variant="outline"
-            size="sm"
-            disabled={isLoading}
-            className="flex items-center gap-2"
-          >
-            {isLoading ? (
-              <span>Refreshing...</span>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-rotate-ccw">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                  <path d="M3 3v5h5"/>
-                </svg>
-                <span>Refresh Data</span>
-              </>
-            )}
-          </Button>
-        </div>
         {/* Main Content */}
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -169,40 +133,19 @@ function DashboardOverview() {
               <NextClass lastUpdated={lastUpdated} />
             </div>
             
-            {/* Next Match - Memoized */}
-            {matchStats.nextMatch && (
-              <DashboardStat 
-                key="next-match"
-                label={matchStats.nextMatch.label}
-                value={matchStats.nextMatch.value}
-                description={matchStats.nextMatch.description}
-                intent={matchStats.nextMatch.intent === 'danger' ? 'negative' : undefined}
-                icon={iconMap[matchStats.nextMatch.icon as keyof typeof iconMap] || BracketsIcon}
-              />
-            )}
+            {/* Tweet Counter */}
+            <TweetCounter onCountChange={handleTweetCountChange} />
             
-            {/* Following Match - Memoized */}
-            {matchStats.followingMatch && (
-              <DashboardStat 
-                key="following-match"
-                label={matchStats.followingMatch.label}
-                value={matchStats.followingMatch.value}
-                description={matchStats.followingMatch.description}
-                intent={matchStats.followingMatch.intent === 'danger' ? 'negative' : undefined}
-                icon={iconMap[matchStats.followingMatch.icon as keyof typeof iconMap] || BracketsIcon}
-              />
-            )}
-            
-            {/* Live Match */}
-            {matchStats.liveMatch && matchStats.liveMatch.matchData && (
-              <div className="md:col-span-2 lg:col-span-3">
-                <MatchStats matchData={matchStats.liveMatch.matchData} />
-              </div>
-            )}
+            {/* Reels Counter */}
+            <ReelsCounter onCountChange={handleReelsCountChange} />
           </div>
 
           <div className="mb-6">
-            <DashboardChart />
+            <TweetChart 
+              key={chartRefreshTrigger} 
+              refreshTrigger={chartRefreshTrigger} 
+              onRefresh={handleChartRefresh} 
+            />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

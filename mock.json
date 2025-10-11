@@ -1,21 +1,5 @@
 {
-  "dashboardStats": [
-    {
-      "label": "VALORANT GAMES NEXT",
-      "value": "G2 VS RRQ",
-      "description": "in 8h 31m",
-      "intent": "negative",
-      "icon": "proccesor",
-      "direction": "down"
-    },
-    {
-      "label": "LIVE",
-      "value": "0",
-      "description": "THE CLIENT ALWAYS IS RIGHT",
-      "intent": "neutral",
-      "icon": "boom"
-    }
-  ],
+  "dashboardStats": [],
   "chartData": {
     "week": [
       {
